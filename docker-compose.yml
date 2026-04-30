@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  api:
+    image: polyglot-api:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - HOST_TEMP_DIR=d:/Paras/poly/temp_files
+      - PORT=3000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./temp_files:/app/temp
+      - ./src/public:/app/public
+      - ./src:/app/src
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
