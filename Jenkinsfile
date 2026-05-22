@@ -21,7 +21,8 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    SHORT_SHA = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                    // Use bat to get the git commit SHA on Windows
+                    SHORT_SHA = bat(script: "@git rev-parse --short HEAD", returnStdout: true).trim()
                     echo "Commit: ${SHORT_SHA}"
                     currentBuild.description = "sha=${SHORT_SHA}"
                 }
@@ -32,8 +33,8 @@ pipeline {
         stage('Build TypeScript') {
             steps {
                 dir('src') {
-                    sh 'npm ci'
-                    sh 'npm run build'
+                    bat 'npm ci'
+                    bat 'npm run build'
                 }
             }
         }
@@ -44,10 +45,10 @@ pipeline {
 
                 stage('API') {
                     steps {
-                        sh """
-                            docker build \
-                              -t ${IMAGE_PREFIX}-api:${SHORT_SHA} \
-                              -t ${IMAGE_PREFIX}-api:latest \
+                        bat """
+                            docker build ^
+                              -t ${IMAGE_PREFIX}-api:${SHORT_SHA} ^
+                              -t ${IMAGE_PREFIX}-api:latest ^
                               -f containers/api/Dockerfile .
                         """
                     }
@@ -55,10 +56,10 @@ pipeline {
 
                 stage('Python Runner') {
                     steps {
-                        sh """
-                            docker build \
-                              -t ${IMAGE_PREFIX}-runner-python:${SHORT_SHA} \
-                              -t ${IMAGE_PREFIX}-runner-python:latest \
+                        bat """
+                            docker build ^
+                              -t ${IMAGE_PREFIX}-runner-python:${SHORT_SHA} ^
+                              -t ${IMAGE_PREFIX}-runner-python:latest ^
                               -f containers/python/Dockerfile .
                         """
                     }
@@ -66,10 +67,10 @@ pipeline {
 
                 stage('Node.js Runner') {
                     steps {
-                        sh """
-                            docker build \
-                              -t ${IMAGE_PREFIX}-runner-nodejs:${SHORT_SHA} \
-                              -t ${IMAGE_PREFIX}-runner-nodejs:latest \
+                        bat """
+                            docker build ^
+                              -t ${IMAGE_PREFIX}-runner-nodejs:${SHORT_SHA} ^
+                              -t ${IMAGE_PREFIX}-runner-nodejs:latest ^
                               -f containers/nodejs/Dockerfile .
                         """
                     }
@@ -77,10 +78,10 @@ pipeline {
 
                 stage('C Runner') {
                     steps {
-                        sh """
-                            docker build \
-                              -t ${IMAGE_PREFIX}-runner-c:${SHORT_SHA} \
-                              -t ${IMAGE_PREFIX}-runner-c:latest \
+                        bat """
+                            docker build ^
+                              -t ${IMAGE_PREFIX}-runner-c:${SHORT_SHA} ^
+                              -t ${IMAGE_PREFIX}-runner-c:latest ^
                               -f containers/c/Dockerfile .
                         """
                     }
@@ -88,10 +89,10 @@ pipeline {
 
                 stage('C++ Runner') {
                     steps {
-                        sh """
-                            docker build \
-                              -t ${IMAGE_PREFIX}-runner-cpp:${SHORT_SHA} \
-                              -t ${IMAGE_PREFIX}-runner-cpp:latest \
+                        bat """
+                            docker build ^
+                              -t ${IMAGE_PREFIX}-runner-cpp:${SHORT_SHA} ^
+                              -t ${IMAGE_PREFIX}-runner-cpp:latest ^
                               -f containers/cpp/Dockerfile .
                         """
                     }
@@ -99,10 +100,10 @@ pipeline {
 
                 stage('Java Runner') {
                     steps {
-                        sh """
-                            docker build \
-                              -t ${IMAGE_PREFIX}-runner-java:${SHORT_SHA} \
-                              -t ${IMAGE_PREFIX}-runner-java:latest \
+                        bat """
+                            docker build ^
+                              -t ${IMAGE_PREFIX}-runner-java:${SHORT_SHA} ^
+                              -t ${IMAGE_PREFIX}-runner-java:latest ^
                               -f containers/java/Dockerfile .
                         """
                     }
@@ -120,9 +121,9 @@ pipeline {
                 }
             }
             steps {
-                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+                bat "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
 
-                sh """
+                bat """
                     docker push ${IMAGE_PREFIX}-api:${SHORT_SHA}
                     docker push ${IMAGE_PREFIX}-api:latest
 
@@ -149,17 +150,13 @@ pipeline {
     post {
         always {
             // Log out and remove locally-built images to keep the agent clean
-            sh """
-                docker logout || true
-                docker rmi \
-                  ${IMAGE_PREFIX}-api:${SHORT_SHA}           ${IMAGE_PREFIX}-api:latest \
-                  ${IMAGE_PREFIX}-runner-python:${SHORT_SHA} ${IMAGE_PREFIX}-runner-python:latest \
-                  ${IMAGE_PREFIX}-runner-nodejs:${SHORT_SHA} ${IMAGE_PREFIX}-runner-nodejs:latest \
-                  ${IMAGE_PREFIX}-runner-c:${SHORT_SHA}      ${IMAGE_PREFIX}-runner-c:latest \
-                  ${IMAGE_PREFIX}-runner-cpp:${SHORT_SHA}    ${IMAGE_PREFIX}-runner-cpp:latest \
-                  ${IMAGE_PREFIX}-runner-java:${SHORT_SHA}   ${IMAGE_PREFIX}-runner-java:latest \
-                  2>/dev/null || true
-            """
+            bat "docker logout || exit 0"
+            bat "docker rmi ${IMAGE_PREFIX}-api:${SHORT_SHA} ${IMAGE_PREFIX}-api:latest || exit 0"
+            bat "docker rmi ${IMAGE_PREFIX}-runner-python:${SHORT_SHA} ${IMAGE_PREFIX}-runner-python:latest || exit 0"
+            bat "docker rmi ${IMAGE_PREFIX}-runner-nodejs:${SHORT_SHA} ${IMAGE_PREFIX}-runner-nodejs:latest || exit 0"
+            bat "docker rmi ${IMAGE_PREFIX}-runner-c:${SHORT_SHA} ${IMAGE_PREFIX}-runner-c:latest || exit 0"
+            bat "docker rmi ${IMAGE_PREFIX}-runner-cpp:${SHORT_SHA} ${IMAGE_PREFIX}-runner-cpp:latest || exit 0"
+            bat "docker rmi ${IMAGE_PREFIX}-runner-java:${SHORT_SHA} ${IMAGE_PREFIX}-runner-java:latest || exit 0"
         }
         success {
             echo "✅ Pipeline passed — images pushed as :latest and :${SHORT_SHA}"
