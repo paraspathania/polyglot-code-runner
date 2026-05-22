@@ -51,20 +51,50 @@ int main() {
     cpp: `#include <iostream>
 #include <string>
 
-void computeMagic(int depth) {
-    if (depth == 0) {
-        std::cout << "✨ Magic Achieved ✨\\n";
-        return;
-    }
-    
-    std::cout << std::string(5 - depth, '-') << "> Diving deeper: level " << depth << "\\n";
-    computeMagic(depth - 1);
-}
-
 int main() {
-    std::cout << "--- OmniCode Execution Initiated ---\\n";
-    computeMagic(5);
+    std::string name;
+    std::cout << "Enter your name: ";
+    std::getline(std::cin, name);
+    
+    if (name.empty()) {
+        std::cout << "\\nHello, OmniCode! (No input provided)\\n";
+    } else {
+        std::cout << "\\nHello, " << name << "! Welcome to OmniCode.\\n";
+    }
     return 0;
+}
+`,
+    java: `import java.util.Scanner;
+
+public class Main {
+    public static void computeMagic(int depth) {
+        if (depth == 0) {
+            System.out.println("✨ Magic Achieved ✨");
+            return;
+        }
+        
+        for (int i = 0; i < 5 - depth; i++) System.out.print("-");
+        System.out.println("> Diving deeper: level " + depth);
+        computeMagic(depth - 1);
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter your name: ");
+        
+        if (scanner.hasNextLine()) {
+            String name = scanner.nextLine();
+            if (name.trim().isEmpty()) {
+                System.out.println("\\nHello, OmniCode! (No input provided)");
+            } else {
+                System.out.println("\\nHello, " + name + "! Welcome to OmniCode.");
+            }
+        }
+        
+        System.out.println("\\n--- OmniCode Execution Initiated ---");
+        computeMagic(5);
+        scanner.close();
+    }
 }
 `
 };
@@ -102,6 +132,7 @@ langSelector.addEventListener('change', (e) => {
     let mode = 'javascript';
     if (lang === 'python') mode = 'python';
     if (lang === 'c' || lang === 'cpp') mode = 'text/x-c++src';
+    if (lang === 'java') mode = 'text/x-java';
     
     editor.setOption('mode', mode);
     editor.setValue(codeTemplates[lang]);
@@ -113,6 +144,7 @@ document.querySelectorAll('.sys-time').forEach(el => el.textContent = getSysTime
 runBtn.addEventListener('click', async () => {
     const code = editor.getValue();
     const language = langSelector.value;
+    const input = document.getElementById('stdin-input').value;
     
     if (!code.trim()) return;
 
@@ -136,7 +168,7 @@ runBtn.addEventListener('click', async () => {
         const response = await fetch('/execute', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ language, code })
+            body: JSON.stringify({ language, code, input })
         });
 
         const result = await response.json();

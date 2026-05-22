@@ -1,5 +1,7 @@
 # The OmniCode Sandbox Automator
 
+[![CI / CD](https://github.com/paraspathania/polyglot-code-runner/actions/workflows/ci.yml/badge.svg)](https://github.com/paraspathania/polyglot-code-runner/actions/workflows/ci.yml)
+
 **A containerized, automated code-execution platform** (simplified LeetCode/Replit backend).
 
 ## Features
@@ -75,13 +77,34 @@ curl -X POST http://localhost:3000/execute \
 }
 ```
 
-### Postman Collection
-[Polyglot Sandbox API Postman Collection](https://www.postman.com/example/polyglot-sandbox) (Example Link)
-
 ### Docker Hub Images
-- [polyglot-api on Docker Hub](https://hub.docker.com/r/example/polyglot-api) (Example Link)
-- [polyglot-runner-python on Docker Hub](https://hub.docker.com/r/example/polyglot-runner-python) (Example Link)
-- [polyglot-runner-nodejs on Docker Hub](https://hub.docker.com/r/example/polyglot-runner-nodejs) (Example Link)
+
+| Image | Pull command |
+|---|---|
+| API server | `docker pull paraspathania/polyglot-api:latest` |
+| Python runner | `docker pull paraspathania/polyglot-runner-python:latest` |
+| Node.js runner | `docker pull paraspathania/polyglot-runner-nodejs:latest` |
+| C runner | `docker pull paraspathania/polyglot-runner-c:latest` |
+| C++ runner | `docker pull paraspathania/polyglot-runner-cpp:latest` |
+| Java runner | `docker pull paraspathania/polyglot-runner-java:latest` |
+
+Direct links: [polyglot-api](https://hub.docker.com/r/paraspathania/polyglot-api) · [polyglot-runner-python](https://hub.docker.com/r/paraspathania/polyglot-runner-python) · [polyglot-runner-nodejs](https://hub.docker.com/r/paraspathania/polyglot-runner-nodejs) · [polyglot-runner-c](https://hub.docker.com/r/paraspathania/polyglot-runner-c) · [polyglot-runner-cpp](https://hub.docker.com/r/paraspathania/polyglot-runner-cpp) · [polyglot-runner-java](https://hub.docker.com/r/paraspathania/polyglot-runner-java)
+
+## CI / CD
+
+Every push to `main` runs the GitHub Actions workflow (`.github/workflows/ci.yml`) and the Jenkins pipeline (`Jenkinsfile`):
+
+1. **Build TypeScript** — `npm ci && npm run build` inside `src/`
+2. **Build Docker images** — all six images built in parallel from their respective `containers/*/Dockerfile`
+3. **Push to Docker Hub** — both `:latest` and `:<short-sha>` tags pushed (push events to `main` only)
+
+### Required Secrets / Credentials
+
+| Platform | Secret name | Value |
+|---|---|---|
+| GitHub Actions | `DOCKERHUB_USERNAME` | Your Docker Hub username |
+| GitHub Actions | `DOCKERHUB_TOKEN` | Docker Hub access token |
+| Jenkins | `dockerhub-credentials` | Username + password credential |
 
 ## Security Best Practices
 

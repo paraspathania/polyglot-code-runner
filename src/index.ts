@@ -27,12 +27,12 @@ const HOST_TEMP_DIR = process.env.HOST_TEMP_DIR || path.join(process.cwd(), 'tem
 fs.mkdir(TEMP_DIR, { recursive: true }).catch(console.error);
 
 app.post('/execute', async (req, res) => {
-    const { language, code } = req.body;
+    const { language, code, input } = req.body;
     if (!language || !code) {
         return res.status(400).json({ error: 'Language and code are required' });
     }
 
-    const cacheKey = crypto.createHash('sha256').update(`${language}:${code}`).digest('hex');
+    const cacheKey = crypto.createHash('sha256').update(`${language}:${code}:${input || ''}`).digest('hex');
     try {
         const cachedResult = await redisClient.get(cacheKey);
         if (cachedResult) {
@@ -58,15 +58,24 @@ app.post('/execute', async (req, res) => {
     } else if (language === 'cpp' || language === 'c++') {
         fileExt = '.cpp';
         runnerImage = 'polyglot-runner-cpp:latest';
+    } else if (language === 'java') {
+        fileExt = '.java';
+        runnerImage = 'polyglot-runner-java:latest';
     } else {
         return res.status(400).json({ error: 'Unsupported language' });
     }
 
     const fileName = `code-${fileId}${fileExt}`;
     const localFilePath = path.join(TEMP_DIR, fileName);
+    
+    const inputFileName = `input-${fileId}.txt`;
+    const localInputPath = path.join(TEMP_DIR, inputFileName);
 
     try {
         await fs.writeFile(localFilePath, code);
+        if (input) {
+            await fs.writeFile(localInputPath, input);
+        }
 
         // Security limits are implemented here:
         // - Ephemeral container (--rm)
@@ -76,7 +85,10 @@ app.post('/execute', async (req, res) => {
         // - Read-only volume mount (:ro)
         
         // Use HOST_TEMP_DIR dynamically passed from docker-compose so the runner maps the correct host path
-        const dockerCmd = `docker run --rm --memory=256m --cpus="0.5" --network none -v "${HOST_TEMP_DIR}:/code:ro" ${runnerImage} /code/${fileName}`;
+        let dockerCmd = `docker run --rm --memory=256m --cpus="0.5" --network none -v "${HOST_TEMP_DIR}:/code:ro" ${runnerImage} /code/${fileName}`;
+        if (input) {
+            dockerCmd = `docker run -i --rm --memory=256m --cpus="0.5" --network none -v "${HOST_TEMP_DIR}:/code:ro" ${runnerImage} /code/${fileName} < "${localInputPath}"`;
+        }
         
         try {
             const { stdout, stderr } = await execAsync(dockerCmd, { timeout: 10000 });
@@ -93,8 +105,9 @@ app.post('/execute', async (req, res) => {
                  console.error('Redis save error', e);
             }
             
-            // Clean up temp file
+            // Clean up temp files
             await fs.unlink(localFilePath).catch(console.error);
+            if (input) await fs.unlink(localInputPath).catch(console.error);
             
             return res.json(result);
         } catch (execError: any) {
@@ -106,8 +119,9 @@ app.post('/execute', async (req, res) => {
                 error: execError.message
             };
             
-            // Clean up temp file
+            // Clean up temp files
             await fs.unlink(localFilePath).catch(console.error);
+            if (input) await fs.unlink(localInputPath).catch(console.error);
             
             return res.status(400).json(result);
         }

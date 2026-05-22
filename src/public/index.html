@@ -51,6 +51,7 @@
                         <option value="nodejs">Node.js 20</option>
                         <option value="c">C (GCC)</option>
                         <option value="cpp">C++ (G++)</option>
+                        <option value="java">Java 21</option>
                     </select>
                     <svg class="select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
@@ -95,6 +96,13 @@
                     <span id="status-badge" class="status-badge idle">
                         <span class="status-dot"></span> <span id="status-text">Ready</span>
                     </span>
+                </div>
+                <div class="input-section" style="border-bottom: 1px solid var(--glass-border); padding: 1rem; background: rgba(0,0,0,0.2);">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 500; display: flex; align-items: center; gap: 0.4rem;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6-6-6M12 19h8"></path></svg>
+                        Standard Input (stdin)
+                    </div>
+                    <textarea id="stdin-input" style="width: 100%; height: 60px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-main); font-family: 'JetBrains Mono', monospace; padding: 0.5rem; resize: vertical; outline: none;" placeholder="Enter input variables here..."></textarea>
                 </div>
                 <div class="terminal-container" id="terminal">
                     <div class="welcome-msg">
