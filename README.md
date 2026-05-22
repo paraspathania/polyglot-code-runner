@@ -7,7 +7,7 @@
 ## Features
 
 - **TypeScript REST API** (`POST /execute`) that writes code to a temp file and executes it inside isolated Docker runners.
-- **Secure Runners**: Python & Node.js runners running as non-root users with strict resource limits.
+- **Secure Runners**: Python, Node.js, C, C++, and Java runners running as non-root users with strict resource limits.
 - **Redis Cache**: Caching execution results based on content hash.
 - **Automation**: Full lifecycle automation via `scripts/manage.sh`.
 - **Orchestration**: Docker Compose orchestration for API and Redis services.
@@ -19,8 +19,11 @@
 /scripts            # manage.sh (automation CLI script)
 /containers
 ├── api/            # Dockerfile for the API service
-├── python/         # Dockerfile for the Python runner
-└── nodejs/         # Dockerfile for the Node.js runner
+├── c/              # Dockerfile for the C runner
+├── cpp/            # Dockerfile for the C++ runner
+├── java/           # Dockerfile for the Java runner
+├── nodejs/         # Dockerfile for the Node.js runner
+└── python/         # Dockerfile for the Python runner
 docker-compose.yml  # API + Redis orchestration
 ```
 
@@ -109,7 +112,7 @@ Every push to `main` runs the GitHub Actions workflow (`.github/workflows/ci.yml
 ## Security Best Practices
 
 This sandbox applies multiple security barriers to safely run untrusted code:
-- **Non-Root Execution**: Both Python and Node.js runners use a restricted `runner` user created in their respective `Dockerfile`s.
+- **Non-Root Execution**: All language runners (Python, Node.js, C, C++, Java) use a restricted `runner` user created in their respective `Dockerfile`s.
 - **Ephemeral Containers**: A new, disposable container is spun up for every single code execution (`--rm`).
 - **Resource Limits**: Strict constraints prevent fork-bombs and memory leaks (`--memory=256m --cpus="0.5"`).
 - **Network Isolation**: Runners execute in an offline environment (`--network none`) to prevent outward communication.
