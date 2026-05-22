@@ -7,7 +7,7 @@ services:
       - "3000:3000"
     environment:
       - REDIS_URL=redis://redis:6379
-      - HOST_TEMP_DIR=d:/Paras/poly/temp_files
+      - HOST_TEMP_DIR=d:/Paras/Self_docs/projects/poly/temp_files
       - PORT=3000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
